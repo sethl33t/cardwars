@@ -1,0 +1,123 @@
+-- Place this LocalScript in StarterPlayerScripts
+-- Creates a full-screen UI that recreates the provided layout (no text).
+local Players = game:GetService('Players')
+local player = Players.LocalPlayer
+local gui = Instance.new('ScreenGui')
+gui.Name = 'CardWarsBoard'
+gui.ResetOnSpawn = false
+gui.Parent = player:WaitForChild('PlayerGui')
+
+local function createFrame(parent, name, x, y, sx, sy, bgColor3, borderSize)
+	local f = Instance.new('Frame')
+	f.Name = name
+	f.AnchorPoint = Vector2.new(0,0)
+	f.Position = UDim2.new(x, 0, y, 0)
+	f.Size = UDim2.new(sx, 0, sy, 0)
+	f.BackgroundColor3 = bgColor3
+	f.BorderColor3 = Color3.new(0,0,0)
+	f.BorderSizePixel = borderSize or 6
+	f.Parent = parent
+	return f
+end
+
+local function createCircle(parent, name, x,y,sx,sy, outerColor, innerColor)
+	-- outer circle (serves as border), inner circle (fill)
+	local outer = createFrame(parent, name..'_outer', x,y,sx,sy, outerColor, 0)
+	local outerCorner = Instance.new('UICorner') outerCorner.CornerRadius = UDim.new(1,0) outerCorner.Parent = outer
+	-- inner: slightly inset to make border visible
+	local insetX = (1/1920) * 6 -- ~6px inset
+	local insetY = (1/1080) * 6
+	local inner = createFrame(parent, name..'_inner', x+insetX, y+insetY, sx-(2*insetX), sy-(2*insetY), innerColor, 0)
+	local innerCorner = Instance.new('UICorner') innerCorner.CornerRadius = UDim.new(1,0) innerCorner.Parent = inner
+	return outer, inner
+end
+
+-- Root full-screen background (color matched to the provided image)
+local root = createFrame(gui, 'Root', 0.0000000000, 0.0000000000, 1.0000000000, 1.0000000000, Color3.fromRGB(112,219,110), 0)
+
+-- Left column: red, green, hero circle and HP square
+local leftRed = createFrame(root, 'LeftRed', 0.0338541667, 0.1018518519, 0.1348958333, 0.1703703704, Color3.fromRGB(189,70,70))
+local leftGreen = createFrame(root, 'LeftGreen', 0.0333333333, 0.3129629630, 0.1359375000, 0.1703703704, Color3.fromRGB(4,87,2))
+createCircle(root, 'HeroCircle', 0.0338541667, 0.5250000000, 0.0927083333, 0.1648148148, Color3.fromRGB(0,0,0), Color3.fromRGB(255,255,255))
+local heroHP = createFrame(root, 'HeroHP', 0.1093750000, 0.6250000000, 0.0484375000, 0.0648148148, Color3.fromRGB(255,255,255))
+
+-- Bottom-left hand region and its vertical "card" stripes
+local handBase = createFrame(root, 'HandBase', 0.0187500000, 0.7500000000, 0.1968750000, 0.1768518519, Color3.fromRGB(0,174,239))
+local handStripe0 = createFrame(root, 'HandStripe0', 0.0187500000, 0.7500000000, 0.0161458333, 0.1768518519, Color3.fromRGB(0,119,164))
+local handStripe1 = createFrame(root, 'HandStripe1', 0.0364583333, 0.7500000000, 0.0161458333, 0.1768518519, Color3.fromRGB(0,119,164))
+local handStripe2 = createFrame(root, 'HandStripe2', 0.0552083333, 0.7500000000, 0.0161458333, 0.1768518519, Color3.fromRGB(0,119,164))
+local handStripe3 = createFrame(root, 'HandStripe3', 0.0729166667, 0.7500000000, 0.0171875000, 0.1768518519, Color3.fromRGB(0,119,164))
+local handStripe4 = createFrame(root, 'HandStripe4', 0.0916666667, 0.7500000000, 0.0161458333, 0.1768518519, Color3.fromRGB(0,119,164))
+local handStripe5 = createFrame(root, 'HandStripe5', 0.1093750000, 0.7500000000, 0.0161458333, 0.1768518519, Color3.fromRGB(0,119,164))
+local handStripe6 = createFrame(root, 'HandStripe6', 0.1270833333, 0.7500000000, 0.0171875000, 0.1768518519, Color3.fromRGB(0,119,164))
+
+-- Top: four yellow columns (building lanes)
+local topYellow1 = createFrame(root, 'TopYellow1', 0.2369791667, 0.1648148148, 0.1291666667, 0.3324074074, Color3.fromRGB(232,236,122))
+local topYellow2 = createFrame(root, 'TopYellow2', 0.3692708333, 0.1648148148, 0.1291666667, 0.3324074074, Color3.fromRGB(232,236,122))
+local topYellow3 = createFrame(root, 'TopYellow3', 0.5015625000, 0.1648148148, 0.1291666667, 0.3324074074, Color3.fromRGB(232,236,122))
+local topYellow4 = createFrame(root, 'TopYellow4', 0.6333333333, 0.1648148148, 0.1291666667, 0.3324074074, Color3.fromRGB(232,236,122))
+
+-- Brown/olive rectangles: top (above columns)
+local brownTop1 = createFrame(root, 'BrownTop1', 0.2666666667, 0.0222222222, 0.0697916667, 0.1768518519, Color3.fromRGB(156,158,85))
+local brownTop2 = createFrame(root, 'BrownTop2', 0.3989583333, 0.0222222222, 0.0697916667, 0.1768518519, Color3.fromRGB(156,158,85))
+local brownTop3 = createFrame(root, 'BrownTop3', 0.5312500000, 0.0222222222, 0.0697916667, 0.1768518519, Color3.fromRGB(156,158,85))
+local brownTop4 = createFrame(root, 'BrownTop4', 0.6635416667, 0.0222222222, 0.0697916667, 0.1768518519, Color3.fromRGB(156,158,85))
+
+-- Brown/olive inner rectangles (inside the yellow columns)
+local brownInner1 = createFrame(root, 'BrownInner1', 0.2666666667, 0.2435185185, 0.0697916667, 0.1768518519, Color3.fromRGB(156,158,85))
+local brownInner2 = createFrame(root, 'BrownInner2', 0.3989583333, 0.2435185185, 0.0697916667, 0.1768518519, Color3.fromRGB(156,158,85))
+local brownInner3 = createFrame(root, 'BrownInner3', 0.5312500000, 0.2435185185, 0.0697916667, 0.1768518519, Color3.fromRGB(156,158,85))
+local brownInner4 = createFrame(root, 'BrownInner4', 0.6635416667, 0.2435185185, 0.0697916667, 0.1768518519, Color3.fromRGB(156,158,85))
+
+-- Big blue "land" areas under the yellow columns
+local midBlue1 = createFrame(root, 'MidBlue1', 0.2369791667, 0.5018518519, 0.1291666667, 0.3333333333, Color3.fromRGB(0,174,239))
+local midBlue2 = createFrame(root, 'MidBlue2', 0.3692708333, 0.5018518519, 0.1291666667, 0.3333333333, Color3.fromRGB(0,174,239))
+local midBlue3 = createFrame(root, 'MidBlue3', 0.5015625000, 0.5018518519, 0.1291666667, 0.3333333333, Color3.fromRGB(0,174,239))
+local midBlue4 = createFrame(root, 'MidBlue4', 0.6333333333, 0.5018518519, 0.1291666667, 0.3333333333, Color3.fromRGB(0,174,239))
+
+-- Darker inner rectangles inside the blue areas
+local midInner1 = createFrame(root, 'MidInner1', 0.2666666667, 0.5796296296, 0.0697916667, 0.1814814815, Color3.fromRGB(0,119,164))
+local midInner2 = createFrame(root, 'MidInner2', 0.3989583333, 0.5796296296, 0.0697916667, 0.1814814815, Color3.fromRGB(0,119,164))
+local midInner3 = createFrame(root, 'MidInner3', 0.5312500000, 0.5796296296, 0.0697916667, 0.1814814815, Color3.fromRGB(0,119,164))
+local midInner4 = createFrame(root, 'MidInner4', 0.6635416667, 0.5796296296, 0.0697916667, 0.1814814815, Color3.fromRGB(0,119,164))
+
+-- Bottom building-card rectangles
+local building1 = createFrame(root, 'Building1', 0.2666666667, 0.7990740741, 0.0697916667, 0.1805555556, Color3.fromRGB(0,119,164))
+local building2 = createFrame(root, 'Building2', 0.3989583333, 0.7990740741, 0.0697916667, 0.1805555556, Color3.fromRGB(0,119,164))
+local building3 = createFrame(root, 'Building3', 0.5312500000, 0.7990740741, 0.0697916667, 0.1805555556, Color3.fromRGB(0,119,164))
+local building4 = createFrame(root, 'Building4', 0.6635416667, 0.7990740741, 0.0697916667, 0.1805555556, Color3.fromRGB(0,119,164))
+
+-- Right-side yellow stacked area (with thin vertical stripes)
+local topHandBase = createFrame(root, 'TopHandBase', 0.7833333333, 0.0740740741, 0.1968750000, 0.1768518519, Color3.fromRGB(156,158,85))
+
+-- vertical stripes inside hand (7 slots)
+local stripeColor = Color3.fromRGB(120, 122, 65) -- darker version for contrast
+local startX = 0.7833333333
+local stripeWidth = 0.0161458333
+local stripeHeight = 0.1768518519
+local yPos = 0.0740740741
+
+for i = 0, 6 do
+	local stripe = createFrame(root, "TopHandStripe"..i,
+		startX + (i * 0.018), -- offset each stripe a bit
+		yPos,
+		stripeWidth,
+		stripeHeight,
+		stripeColor
+	)
+end
+
+
+-- Right-side circle + small square
+createCircle(root, 'RightCircle', 0.8744791667, 0.3175925926, 0.0927083333, 0.1648148148, Color3.fromRGB(0,0,0), Color3.fromRGB(255,255,255))
+local rightSmall = createFrame(root, 'RightSmall', 0.8411458333, 0.3175925926, 0.0484375000, 0.0648148148, Color3.fromRGB(255,255,255))
+
+-- Right-side deck and discard
+local rightDeck = createFrame(root, 'RightDeck', 0.8317708333, 0.5240740741, 0.1359375000, 0.1703703704, Color3.fromRGB(4,87,2))
+local rightDiscard = createFrame(root, 'RightDiscard', 0.8322916667, 0.7351851852, 0.1348958333, 0.1703703704, Color3.fromRGB(189,70,70))
+
+-- Adjust ZIndex order so big background is at bottom and cards are on top
+root.ZIndex = 1
+for _,c in ipairs(root:GetChildren()) do if c:IsA('Frame') then c.ZIndex = 2 end end
+
+-- Done. Replace placeholders with ImageLabels if you want artwork; sizes/positions are normalized to 1920x1080.

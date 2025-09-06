@@ -1,0 +1,133 @@
+-- LocalScript inside StarterPlayerScripts
+
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local heroEvent = ReplicatedStorage:WaitForChild("CardWarsHeroSelect")
+
+-- ScreenGui
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "CardWarsMainMenu"
+screenGui.ResetOnSpawn = false
+screenGui.Parent = playerGui
+
+-- Background (green)
+local bg = Instance.new("Frame")
+bg.Size = UDim2.new(1, 0, 1, 0)
+bg.BackgroundColor3 = Color3.fromRGB(112, 219, 110)
+bg.BorderSizePixel = 0
+bg.Parent = screenGui
+
+-- Top image rectangle
+local topImage = Instance.new("Frame")
+topImage.Size = UDim2.new(0.6, 0, 0.25, 0)
+topImage.Position = UDim2.new(0.2, 0, 0.05, 0)
+topImage.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+topImage.BorderColor3 = Color3.fromRGB(0, 0, 0)
+topImage.BorderSizePixel = 3
+topImage.Parent = bg
+
+-- Title text
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, 0, 0.12, 0)
+title.Position = UDim2.new(0, 0, 0.33, 0)
+title.BackgroundTransparency = 1
+title.Text = "CARD WARS"
+title.TextScaled = true
+title.Font = Enum.Font.Fantasy
+title.TextColor3 = Color3.fromRGB(255, 255, 255)
+title.Parent = bg
+
+-- Hero circles
+local function createHeroCircle(name, posX, imageId)
+	local circle = Instance.new("ImageButton")
+	circle.Name = name
+	circle.Size = UDim2.new(0.25, 0, 0.25, 0)
+	circle.Position = UDim2.new(posX, 0, 0.55, 0)
+	circle.AnchorPoint = Vector2.new(0.5, 0.5)
+	circle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+	circle.BorderColor3 = Color3.fromRGB(0, 0, 0)
+	circle.BorderSizePixel = 4
+
+	-- Image setup
+	circle.Image = imageId or "" -- hero portrait, or blank
+	circle.ScaleType = Enum.ScaleType.Fit
+	circle.ImageTransparency = 0
+	circle.ZIndex = 2
+
+	-- Make circular
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(1, 0)
+	corner.Parent = circle
+
+	circle.Parent = bg
+	return circle
+end
+
+-- Example usage
+local heroOne = createHeroCircle("HeroOne", 0.25, "rbxassetid://1234567890")
+local heroTwo = createHeroCircle("HeroTwo", 0.75, "rbxassetid://9876543210")
+
+
+
+
+-- Player name rectangles
+local function createNameRect(name, posX)
+	local frame = Instance.new("Frame")
+	frame.Name = name
+	frame.Size = UDim2.new(0.2, 0, 0.08, 0)
+	frame.Position = UDim2.new(posX, 0, 0.75, 0)
+	frame.AnchorPoint = Vector2.new(0.5, 0.5)
+	frame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+	frame.BorderColor3 = Color3.fromRGB(0, 0, 0)
+	frame.BorderSizePixel = 4
+	frame.Parent = bg
+
+	local label = Instance.new("TextLabel")
+	label.Size = UDim2.new(1, 0, 1, 0)
+	label.BackgroundTransparency = 1
+	label.Text = "Waiting..." -- visible placeholder text
+	label.TextScaled = true
+	label.Font = Enum.Font.Fantasy
+	label.TextColor3 = Color3.fromRGB(0, 0, 0)
+	label.Parent = frame
+
+	return label
+end
+
+local heroOneName = createNameRect("HeroOneName", 0.35)
+local heroTwoName = createNameRect("HeroTwoName", 0.65)
+
+-- Begin button
+local beginBtn = Instance.new("TextButton")
+beginBtn.Size = UDim2.new(0.25, 0, 0.08, 0)
+beginBtn.Position = UDim2.new(0.375, 0, 0.9, 0)
+beginBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+beginBtn.BorderColor3 = Color3.fromRGB(0, 0, 0)
+beginBtn.BorderSizePixel = 4
+beginBtn.Text = "BEGIN GAME"
+beginBtn.TextScaled = true
+beginBtn.Font = Enum.Font.Fantasy
+beginBtn.TextColor3 = Color3.fromRGB(0, 0, 0)
+beginBtn.Parent = bg
+
+-- Hero click handlers
+heroOne.MouseButton1Click:Connect(function()
+	heroEvent:FireServer("HeroOne")
+end)
+
+heroTwo.MouseButton1Click:Connect(function()
+	heroEvent:FireServer("HeroTwo")
+end)
+
+-- Listen for server updates
+heroEvent.OnClientEvent:Connect(function(heroName, playerName)
+	if heroName == "HeroOne" then
+		heroOne.Text = "" -- clear "Select" once claimed
+		heroOneName.Text = playerName ~= "" and playerName or "Waiting..."
+	elseif heroName == "HeroTwo" then
+		heroTwo.Text = ""
+		heroTwoName.Text = playerName ~= "" and playerName or "Waiting..."
+	end
+end)

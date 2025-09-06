@@ -1,0 +1,33 @@
+-- ServerScriptService > HeroSelectionScript
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Players = game:GetService("Players")
+
+local event = ReplicatedStorage:WaitForChild("CardWarsHeroSelect")
+
+-- Keep track of which hero is claimed
+-- heroSlots = { HeroOne = playerName, HeroTwo = playerName }
+local heroSlots = {}
+
+event.OnServerEvent:Connect(function(player, heroName)
+	if heroSlots[heroName] then
+		-- already taken, ignore
+		return
+	end
+
+	-- mark hero as taken
+	heroSlots[heroName] = player.Name
+
+	-- tell everyone about the choice
+	event:FireAllClients(heroName, player.Name)
+end)
+
+-- Optional: clear slot if a player leaves
+Players.PlayerRemoving:Connect(function(player)
+	for hero, name in pairs(heroSlots) do
+		if name == player.Name then
+			heroSlots[hero] = nil
+			event:FireAllClients(hero, "") -- reset hero slot
+		end
+	end
+end)
