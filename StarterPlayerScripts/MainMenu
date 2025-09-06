@@ -66,8 +66,8 @@ local function createHeroCircle(name, posX, imageId)
 end
 
 -- Example usage
-local heroOne = createHeroCircle("HeroOne", 0.25, "rbxassetid://1234567890")
-local heroTwo = createHeroCircle("HeroTwo", 0.75, "rbxassetid://9876543210")
+local heroOne = createHeroCircle("HeroOne", 0.25, "rbxassetid://16792715883")
+local heroTwo = createHeroCircle("HeroTwo", 0.75, "rbxassetid://15920405964")
 
 
 
