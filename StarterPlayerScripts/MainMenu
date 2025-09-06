@@ -60,10 +60,13 @@ local function createHeroCircle(name, posX, imageId)
 	imageLabel.Position = UDim2.new(0, 4, 0, 4)
 	imageLabel.BackgroundTransparency = 0
 	imageLabel.Image = imageId or ""
-	imageLabel.ScaleType = Enum.ScaleType.Fit
+	imageLabel.ScaleType = Enum.ScaleType.Stretch
 	imageLabel.ImageTransparency = 0
 	imageLabel.ZIndex = 3
 	imageLabel.Parent = button
+
+	-- Debug output
+	print("Created ImageLabel for", name, "with Image ID:", imageId)
 
 	-- Make both circular
 	local buttonCorner = Instance.new("UICorner")
@@ -78,9 +81,9 @@ local function createHeroCircle(name, posX, imageId)
 	return button, imageLabel
 end
 
--- Create hero buttons and image labels
-local heroOne, heroOneImage = createHeroCircle("HeroOne", 0.25, "rbxassetid://16792715883")
-local heroTwo, heroTwoImage = createHeroCircle("HeroTwo", 0.75, "rbxassetid://15920405964")
+-- Create hero buttons and image labels (using test assets)
+local heroOne, heroOneImage = createHeroCircle("HeroOne", 0.25, "rbxassetid://8560915132")
+local heroTwo, heroTwoImage = createHeroCircle("HeroTwo", 0.75, "rbxassetid://8560915132")
 
 
 
