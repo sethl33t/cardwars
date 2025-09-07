@@ -5,6 +5,7 @@ local player = Players.LocalPlayer
 local gui = Instance.new('ScreenGui')
 gui.Name = 'CardWarsBoard'
 gui.ResetOnSpawn = false
+gui.Enabled = false -- Start disabled, MainMenu will enable when both heroes selected
 gui.Parent = player:WaitForChild('PlayerGui')
 
 local function createFrame(parent, name, x, y, sx, sy, bgColor3, borderSize)

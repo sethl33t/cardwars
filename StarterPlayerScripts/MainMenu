@@ -5,6 +5,7 @@ local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local heroEvent = ReplicatedStorage:WaitForChild("CardWarsHeroSelect")
+local readyEvent = ReplicatedStorage:WaitForChild("CardWarsReady")
 
 -- ScreenGui
 local screenGui = Instance.new("ScreenGui")
@@ -119,7 +120,7 @@ local jakeName = createNameRect("JakeName", 0.65)
 local beginBtn = Instance.new("TextButton")
 beginBtn.Size = UDim2.new(0.25, 0, 0.08, 0)
 beginBtn.Position = UDim2.new(0.375, 0, 0.9, 0)
-beginBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+beginBtn.BackgroundColor3 = Color3.fromRGB(200, 200, 200) -- Start gray (not ready)
 beginBtn.BorderColor3 = Color3.fromRGB(0, 0, 0)
 beginBtn.BorderSizePixel = 4
 beginBtn.Text = "BEGIN GAME"
@@ -132,16 +133,58 @@ beginBtn.Parent = bg
 local playerSelectedHero = nil
 local localPlayer = game.Players.LocalPlayer
 
+-- Track hero selections for both slots
+local heroSelections = {
+	Finn = "",
+	Jake = ""
+}
+
+-- Function to check if both heroes are selected
+local function checkBothHeroesSelected()
+	return heroSelections.Finn ~= "" and heroSelections.Jake ~= ""
+end
+
+-- Function to enable CardWarsUI and disable MainMenu
+local function startGame()
+	local playerGui = localPlayer:WaitForChild("PlayerGui")
+	local cardWarsUI = playerGui:FindFirstChild("CardWarsBoard")
+	local mainMenuUI = bg.Parent -- The MainMenu ScreenGui
+
+	print("Attempting to start game...")
+	print("CardWarsUI found:", cardWarsUI ~= nil)
+	print("MainMenuUI found:", mainMenuUI ~= nil)
+
+	if cardWarsUI then
+		cardWarsUI.Enabled = true
+		print("CardWarsUI enabled!")
+	else
+		print("ERROR: CardWarsBoard not found in PlayerGui!")
+	end
+
+	if mainMenuUI then
+		mainMenuUI.Enabled = false
+		print("MainMenu disabled!")
+	else
+		print("ERROR: MainMenu ScreenGui not found!")
+	end
+end
+
 -- Hero click handlers with lock-in functionality
 finnButton.MouseButton1Click:Connect(function()
-	if playerSelectedHero == nil then -- Only allow selection if no hero chosen yet
+	-- Only allow selection if: 1) player hasn't chosen yet, AND 2) Finn isn't taken by someone else
+	if playerSelectedHero == nil and heroSelections.Finn == "" then
 		heroEvent:FireServer("Finn")
+	elseif heroSelections.Finn ~= "" then
+		print("Finn is already taken by " .. heroSelections.Finn)
 	end
 end)
 
 jakeButton.MouseButton1Click:Connect(function()
-	if playerSelectedHero == nil then -- Only allow selection if no hero chosen yet
+	-- Only allow selection if: 1) player hasn't chosen yet, AND 2) Jake isn't taken by someone else
+	if playerSelectedHero == nil and heroSelections.Jake == "" then
 		heroEvent:FireServer("Jake")
+	elseif heroSelections.Jake ~= "" then
+		print("Jake is already taken by " .. heroSelections.Jake)
 	end
 end)
 
@@ -149,19 +192,89 @@ end)
 heroEvent.OnClientEvent:Connect(function(heroName, playerName)
 	if heroName == "Finn" then
 		finnName.Text = playerName ~= "" and playerName or "Waiting..."
+		heroSelections.Finn = playerName -- Track selection
+
+		-- Visual feedback for ALL players: if Finn is taken, dim it for everyone
+		if playerName ~= "" then
+			finnImage.ImageTransparency = 0.7 -- Dim Finn since it's taken
+		else
+			finnImage.ImageTransparency = 0 -- Restore Finn if it becomes available
+		end
+
 		-- Lock in selection if this player chose Finn
 		if playerName == localPlayer.Name then
 			playerSelectedHero = "Finn"
-			-- Visual feedback: dim Jake since we chose Finn
-			jakeImage.ImageTransparency = 0.7
 		end
 	elseif heroName == "Jake" then
 		jakeName.Text = playerName ~= "" and playerName or "Waiting..."
+		heroSelections.Jake = playerName -- Track selection
+
+		-- Visual feedback for ALL players: if Jake is taken, dim it for everyone
+		if playerName ~= "" then
+			jakeImage.ImageTransparency = 0.7 -- Dim Jake since it's taken
+		else
+			jakeImage.ImageTransparency = 0 -- Restore Jake if it becomes available
+		end
+
 		-- Lock in selection if this player chose Jake
 		if playerName == localPlayer.Name then
 			playerSelectedHero = "Jake"
-			-- Visual feedback: dim Finn since we chose Jake
-			finnImage.ImageTransparency = 0.7
 		end
+	end
+
+	-- Check if both heroes are now selected
+	if checkBothHeroesSelected() then
+		print("Both heroes selected! BEGIN GAME button is now active.")
+		-- You could add visual feedback here like changing button color
+		beginBtn.BackgroundColor3 = Color3.fromRGB(0, 255, 0) -- Green when ready
+	else
+		beginBtn.BackgroundColor3 = Color3.fromRGB(200, 200, 200) -- Gray when not ready
+	end
+end)
+
+-- Track ready state
+local playerReady = false
+
+-- BEGIN GAME / READY button click handler
+beginBtn.MouseButton1Click:Connect(function()
+	print("BEGIN GAME button clicked!")
+	print("Finn selected by:", heroSelections.Finn)
+	print("Jake selected by:", heroSelections.Jake)
+	print("Both heroes selected:", checkBothHeroesSelected())
+
+	if checkBothHeroesSelected() and not playerReady then
+		print("Player is ready!")
+		playerReady = true
+		readyEvent:FireServer() -- Tell server this player is ready
+	elseif not checkBothHeroesSelected() then
+		print("Cannot ready up - both heroes must be selected first!")
+		print("Missing selections - Finn:", heroSelections.Finn == "", "Jake:", heroSelections.Jake == "")
+	end
+end)
+
+-- Ready system event handler
+readyEvent.OnClientEvent:Connect(function(eventType, data)
+	if eventType == "ready_update" then
+		local readyCount = data
+		print("Ready update: " .. readyCount .. "/2 players ready")
+
+		if readyCount == 1 then
+			beginBtn.Text = "Ready (1/2)"
+		elseif readyCount == 2 then
+			beginBtn.Text = "Ready (2/2)"
+		end
+
+	elseif eventType == "start_countdown" then
+		print("Countdown starting!")
+		beginBtn.Text = "Starting..."
+
+	elseif eventType == "countdown" then
+		local timeLeft = data
+		beginBtn.Text = tostring(timeLeft)
+		print("Countdown: " .. timeLeft)
+
+	elseif eventType == "start_game" then
+		print("Game starting for all players!")
+		startGame()
 	end
 end)

@@ -3,13 +3,21 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
 
-local event = ReplicatedStorage:WaitForChild("CardWarsHeroSelect")
+local heroEvent = ReplicatedStorage:WaitForChild("CardWarsHeroSelect")
+
+-- Create ready system RemoteEvent
+local readyEvent = Instance.new("RemoteEvent")
+readyEvent.Name = "CardWarsReady"
+readyEvent.Parent = ReplicatedStorage
 
 -- Keep track of which hero is claimed
 -- heroSlots = { HeroOne = playerName, HeroTwo = playerName }
 local heroSlots = {}
 
-event.OnServerEvent:Connect(function(player, heroName)
+-- Track ready states
+local readyPlayers = {}
+
+heroEvent.OnServerEvent:Connect(function(player, heroName)
 	if heroSlots[heroName] then
 		-- already taken, ignore
 		return
@@ -19,7 +27,45 @@ event.OnServerEvent:Connect(function(player, heroName)
 	heroSlots[heroName] = player.Name
 
 	-- tell everyone about the choice
-	event:FireAllClients(heroName, player.Name)
+	heroEvent:FireAllClients(heroName, player.Name)
+end)
+
+-- Ready system handler
+readyEvent.OnServerEvent:Connect(function(player)
+	-- Add player to ready list if not already ready
+	if not readyPlayers[player.Name] then
+		readyPlayers[player.Name] = true
+		print(player.Name .. " is ready!")
+
+		-- Count ready players
+		local readyCount = 0
+		for _ in pairs(readyPlayers) do
+			readyCount = readyCount + 1
+		end
+
+		print("Ready players: " .. readyCount .. "/2")
+
+		-- Tell all clients about ready status
+		readyEvent:FireAllClients("ready_update", readyCount)
+
+		-- If both players are ready, start countdown
+		if readyCount >= 2 then
+			print("Both players ready! Starting countdown...")
+			readyEvent:FireAllClients("start_countdown")
+
+			-- 3 second countdown
+			wait(1)
+			readyEvent:FireAllClients("countdown", 3)
+			wait(1)
+			readyEvent:FireAllClients("countdown", 2)
+			wait(1)
+			readyEvent:FireAllClients("countdown", 1)
+			wait(1)
+
+			-- Start the game for everyone
+			readyEvent:FireAllClients("start_game")
+		end
+	end
 end)
 
 -- Optional: clear slot if a player leaves
@@ -27,7 +73,18 @@ Players.PlayerRemoving:Connect(function(player)
 	for hero, name in pairs(heroSlots) do
 		if name == player.Name then
 			heroSlots[hero] = nil
-			event:FireAllClients(hero, "") -- reset hero slot
+			heroEvent:FireAllClients(hero, "") -- reset hero slot
 		end
+	end
+
+	-- Remove from ready list
+	if readyPlayers[player.Name] then
+		readyPlayers[player.Name] = nil
+		-- Update ready count for remaining players
+		local readyCount = 0
+		for _ in pairs(readyPlayers) do
+			readyCount = readyCount + 1
+		end
+		readyEvent:FireAllClients("ready_update", readyCount)
 	end
 end)
