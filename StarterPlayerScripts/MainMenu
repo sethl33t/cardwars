@@ -12,78 +12,78 @@ screenGui.Name = "CardWarsMainMenu"
 screenGui.ResetOnSpawn = false
 screenGui.Parent = playerGui
 
--- Background (green)
-local bg = Instance.new("Frame")
+-- Background with custom image
+local bg = Instance.new("ImageLabel")
 bg.Size = UDim2.new(1, 0, 1, 0)
-bg.BackgroundColor3 = Color3.fromRGB(112, 219, 110)
+bg.BackgroundTransparency = 1
+bg.Image = "rbxassetid://137367874303752"
+bg.ScaleType = Enum.ScaleType.Stretch -- Fills entire screen
 bg.BorderSizePixel = 0
 bg.Parent = screenGui
 
--- Top image rectangle
-local topImage = Instance.new("Frame")
-topImage.Size = UDim2.new(0.6, 0, 0.25, 0)
-topImage.Position = UDim2.new(0.2, 0, 0.05, 0)
-topImage.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-topImage.BorderColor3 = Color3.fromRGB(0, 0, 0)
-topImage.BorderSizePixel = 3
-topImage.Parent = bg
+-- Top logo image (15% bigger)
+local topLogo = Instance.new("ImageLabel")
+topLogo.Size = UDim2.new(0.69, 0, 0.2875, 0) -- 15% bigger (0.6 * 1.15 = 0.69, 0.25 * 1.15 = 0.2875)
+topLogo.Position = UDim2.new(0.155, 0, 0.05, 0) -- Adjusted to keep centered (0.2 - 0.045 = 0.155)
+topLogo.BackgroundTransparency = 1
+topLogo.Image = "rbxassetid://93804661712260"
+topLogo.ScaleType = Enum.ScaleType.Fit
+topLogo.Parent = bg
 
--- Title text
-local title = Instance.new("TextLabel")
-title.Size = UDim2.new(1, 0, 0.12, 0)
-title.Position = UDim2.new(0, 0, 0.33, 0)
-title.BackgroundTransparency = 1
-title.Text = "CARD WARS"
-title.TextScaled = true
-title.Font = Enum.Font.Fantasy
-title.TextColor3 = Color3.fromRGB(255, 255, 255)
-title.Parent = bg
+-- Hero selection with clickable ImageLabels
+local function createHeroButton(name, posX, imageId)
+	-- Create clickable ImageLabel (no background frame needed)
+	local imageButton = Instance.new("ImageLabel")
+	imageButton.Name = name
+	imageButton.Size = UDim2.new(0.3, 0, 0.3, 0) -- Larger size (was 0.25)
+	imageButton.Position = UDim2.new(posX, 0, 0.5, 0) -- Higher position, directly above name rectangles
+	imageButton.AnchorPoint = Vector2.new(0.5, 0.5)
+	imageButton.BackgroundTransparency = 1 -- Fully transparent background
+	imageButton.Image = imageId or ""
+	imageButton.ScaleType = Enum.ScaleType.Fit
+	imageButton.ImageTransparency = 0
+	imageButton.ZIndex = 2
+	imageButton.Parent = bg
 
--- Hero circles with ImageLabels
-local function createHeroCircle(name, posX, imageId)
-	-- Create clickable button frame
-	local button = Instance.new("TextButton")
-	button.Name = name
-	button.Size = UDim2.new(0.25, 0, 0.25, 0)
-	button.Position = UDim2.new(posX, 0, 0.55, 0)
-	button.AnchorPoint = Vector2.new(0.5, 0.5)
-	button.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-	button.BorderColor3 = Color3.fromRGB(0, 0, 0)
-	button.BorderSizePixel = 4
-	button.Text = ""
-	button.ZIndex = 2
+	-- Create invisible button overlay for clicking (same size as image)
+	local clickButton = Instance.new("TextButton")
+	clickButton.Name = name .. "ClickArea"
+	clickButton.Size = UDim2.new(1, 0, 1, 0) -- Same size as the ImageLabel
+	clickButton.Position = UDim2.new(0, 0, 0, 0)
+	clickButton.BackgroundTransparency = 1
+	clickButton.Text = ""
+	clickButton.ZIndex = 3
+	clickButton.Parent = imageButton
 
-	-- Create ImageLabel for the portrait
-	local imageLabel = Instance.new("ImageLabel")
-	imageLabel.Name = "Portrait"
-	imageLabel.Size = UDim2.new(1, -8, 1, -8) -- Slightly smaller to show border
-	imageLabel.Position = UDim2.new(0, 4, 0, 4)
-	imageLabel.BackgroundTransparency = 0
-	imageLabel.Image = imageId or ""
-	imageLabel.ScaleType = Enum.ScaleType.Stretch
-	imageLabel.ImageTransparency = 0
-	imageLabel.ZIndex = 3
-	imageLabel.Parent = button
+	-- Add hover effects
+	local TweenService = game:GetService("TweenService")
+	local hoverTweenInfo = TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+
+	clickButton.MouseEnter:Connect(function()
+		-- Only show hover effect if this hero isn't dimmed (still selectable)
+		if imageButton.ImageTransparency < 0.5 then
+			local expandTween = TweenService:Create(imageButton, hoverTweenInfo, {Size = UDim2.new(0.32, 0, 0.32, 0)})
+			expandTween:Play()
+		end
+	end)
+
+	clickButton.MouseLeave:Connect(function()
+		-- Only shrink if this hero isn't dimmed
+		if imageButton.ImageTransparency < 0.5 then
+			local shrinkTween = TweenService:Create(imageButton, hoverTweenInfo, {Size = UDim2.new(0.3, 0, 0.3, 0)})
+			shrinkTween:Play()
+		end
+	end)
 
 	-- Debug output
-	print("Created ImageLabel for", name, "with Image ID:", imageId)
+	print("Created hero button for", name, "with Image ID:", imageId)
 
-	-- Make both circular
-	local buttonCorner = Instance.new("UICorner")
-	buttonCorner.CornerRadius = UDim.new(1, 0)
-	buttonCorner.Parent = button
-
-	local imageCorner = Instance.new("UICorner")
-	imageCorner.CornerRadius = UDim.new(1, 0)
-	imageCorner.Parent = imageLabel
-
-	button.Parent = bg
-	return button, imageLabel
+	return imageButton, clickButton
 end
 
--- Create hero buttons and image labels (using test assets)
-local heroOne, heroOneImage = createHeroCircle("HeroOne", 0.25, "rbxassetid://8560915132")
-local heroTwo, heroTwoImage = createHeroCircle("HeroTwo", 0.75, "rbxassetid://8560915132")
+-- Create hero buttons with Finn and Jake textures
+local finnImage, finnButton = createHeroButton("Finn", 0.35, "rbxassetid://113369521037393")
+local jakeImage, jakeButton = createHeroButton("Jake", 0.65, "rbxassetid://106106718776906")
 
 
 
@@ -112,8 +112,8 @@ local function createNameRect(name, posX)
 	return label
 end
 
-local heroOneName = createNameRect("HeroOneName", 0.35)
-local heroTwoName = createNameRect("HeroTwoName", 0.65)
+local finnName = createNameRect("FinnName", 0.35)
+local jakeName = createNameRect("JakeName", 0.65)
 
 -- Begin button
 local beginBtn = Instance.new("TextButton")
@@ -128,22 +128,40 @@ beginBtn.Font = Enum.Font.Fantasy
 beginBtn.TextColor3 = Color3.fromRGB(0, 0, 0)
 beginBtn.Parent = bg
 
--- Hero click handlers
-heroOne.MouseButton1Click:Connect(function()
-	heroEvent:FireServer("HeroOne")
+-- Track player's selected hero (locked in once chosen)
+local playerSelectedHero = nil
+local localPlayer = game.Players.LocalPlayer
+
+-- Hero click handlers with lock-in functionality
+finnButton.MouseButton1Click:Connect(function()
+	if playerSelectedHero == nil then -- Only allow selection if no hero chosen yet
+		heroEvent:FireServer("Finn")
+	end
 end)
 
-heroTwo.MouseButton1Click:Connect(function()
-	heroEvent:FireServer("HeroTwo")
+jakeButton.MouseButton1Click:Connect(function()
+	if playerSelectedHero == nil then -- Only allow selection if no hero chosen yet
+		heroEvent:FireServer("Jake")
+	end
 end)
 
 -- Listen for server updates
 heroEvent.OnClientEvent:Connect(function(heroName, playerName)
-	if heroName == "HeroOne" then
-		-- Hero is claimed, could add visual feedback here if needed
-		heroOneName.Text = playerName ~= "" and playerName or "Waiting..."
-	elseif heroName == "HeroTwo" then
-		-- Hero is claimed, could add visual feedback here if needed
-		heroTwoName.Text = playerName ~= "" and playerName or "Waiting..."
+	if heroName == "Finn" then
+		finnName.Text = playerName ~= "" and playerName or "Waiting..."
+		-- Lock in selection if this player chose Finn
+		if playerName == localPlayer.Name then
+			playerSelectedHero = "Finn"
+			-- Visual feedback: dim Jake since we chose Finn
+			jakeImage.ImageTransparency = 0.7
+		end
+	elseif heroName == "Jake" then
+		jakeName.Text = playerName ~= "" and playerName or "Waiting..."
+		-- Lock in selection if this player chose Jake
+		if playerName == localPlayer.Name then
+			playerSelectedHero = "Jake"
+			-- Visual feedback: dim Finn since we chose Jake
+			finnImage.ImageTransparency = 0.7
+		end
 	end
 end)
